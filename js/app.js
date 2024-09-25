@@ -10,11 +10,15 @@ canvas.height = window.innerHeight;
 const gravity = 0.5;
 
 // PLAYER CLASS -- DEFINED
+
+const unicornImg = new Image();
+unicornImg.src = "media/unicorn-player.png";
+
 class Player {
   constructor() {
     // PLAYER SIZE
-    this.width = 50;
-    this.height = 50;
+    this.width = 100;
+    this.height = 100;
 
     // SET INITIAN POSITION OF PLAYER (x, y)
     this.x = 100;
@@ -27,14 +31,12 @@ class Player {
 
     // BOOL -- check if player is jumping
     this.jumping = false;
-  }
+  } //END OF CONSTRUCTOR
 
   // SETS PLAYER ON CANVAS
   draw() {
-    // FILLS PLAYER SQUARE
-    ctx.fillStyle = "red";
-    ctx.fillRect(this.x, this.y, this.width, this.height);
-  }
+    ctx.drawImage(unicornImg, this.x, this.y, this.width, this.height);
+  } //END DRAW METHOD
 
   // FUNCTION/METHOD -- UPDATES PLAYERS POSITION
   update() {
@@ -49,11 +51,11 @@ class Player {
       this.y = canvas.height - this.height; // Stop the player at ground level
       this.velocityY = 0; // Reset vertical speed
       this.jumping = false; // Player is no longer jumping
-    }
+    } //END IF STATMENT
 
     // Call the draw method to render the player on the screen
     this.draw();
-  }
+  } //END UPDATE METHOD
 
   // METHOD -- PLAYER JUMPING
   jump() {
@@ -61,47 +63,71 @@ class Player {
     if (!this.jumping) {
       this.velocityY = -15; // Set jumping(up) speed
       this.jumping = true; //  returns boolean true if the player is jumping
-    }
-  }
+    } //END IF STATEMENT
+  } //END JUMP METHOD
 
   // METHOD -- MOVE LEFT
   moveLeft() {
     this.x -= this.speed; // Decrease x position to move left
-  }
+  } //END OF MOVE LEFT METHOD
 
   // METHOD -- MOVE RIGHT
   moveRight() {
     this.x += this.speed; // Increase x position to move right
-  }
-}
+  } //END OF MOVE RIGHT METHOD
+} //END OF PLAYER CLASS
 
 // CREATES INSTANCE OF PLAYER CLASS
 const player = new Player();
+
+//FUNCTION -- DRAWS STARSIN THE BACKGROUND
+function drawStar(x, y, size) {
+  ctx.beginPath(0);
+  ctx.arc(x, y, size, 0, Math.PI * 2, false);
+  ctx.fillStyle = "white";
+  ctx.fill();
+} //END drawStar FUNCTION
+
+//FUNCTION -- CREATES WHOLE BACKGROUND
+function createStarrySky() {
+  for (let i = 0; i < 100; i++) {
+    //using math.random to randomize star positions
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+
+    //randomizing star size
+    const size = Math.random() * 2 + 1;
+    drawStar(x, y, size);
+  } //END OF FOR LOOP
+} //END OF crateStarrySky FUNCTION
 
 // FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
 function gameLoop() {
   //RESTART -- Clear the entire canvas for redrawing
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  //Background
+  createStarrySky();
+
   // Update the player's position and restart them
   player.update();
 
   // Repeats the game loop using requestAnimationFrame
   requestAnimationFrame(gameLoop);
-}
+} // END OF gameLoop FUNCTION
 
-// EVENT LISTENERS FOR KEYBOARD STROKES 
+// EVENT LISTENERS FOR KEYBOARD STROKES
 window.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
     player.jump(); // Trigger jump -- spacebar
-  }
+  } //END space IF
   if (e.code === "ArrowLeft") {
     player.moveLeft(); // Move left -- left arrow key
-  }
+  } //END arrow Left IF
   if (e.code === "ArrowRight") {
-    player.moveRight(); // Move  right -- right arrow key 
-  }
-});
+    player.moveRight(); // Move  right -- right arrow key
+  } //ND arrow right IF
+}); //END OF KEYSTROKE EVENT LISTENERS
 
-// CALLS gameLoop FUCNTION TO START GAME 
+// CALLS gameLoop FUCNTION TO START GAME
 gameLoop();
