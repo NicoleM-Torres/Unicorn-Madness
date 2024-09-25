@@ -80,26 +80,41 @@ class Player {
 // CREATES INSTANCE OF PLAYER CLASS
 const player = new Player();
 
-//FUNCTION -- DRAWS STARSIN THE BACKGROUND
-function drawStar(x, y, size) {
-  ctx.beginPath(0);
-  ctx.arc(x, y, size, 0, Math.PI * 2, false);
-  ctx.fillStyle = "white";
-  ctx.fill();
-} //END drawStar FUNCTION
+//CLASS FOR STARS -- Background
+class Star {
+  constructor (x, y, size, starBlink){
+    this.x = x;
+    this.y = y;
+    this.size = size;
+    this.blinkSpeed = blinkSpeed; // Controls how fast the star blinks
+    this.opacity = Math.random(); // Random initial opacity
+    this.blinking = Math.random() < 0.5 ? 1 : -1; // Randomly start increasing or decreasing opacity
+  }
 
-//FUNCTION -- CREATES WHOLE BACKGROUND
-function createStarrySky() {
-  for (let i = 0; i < 100; i++) {
-    //using math.random to randomize star positions
-    const x = Math.random() * canvas.width;
-    const y = Math.random() * canvas.height;
+  
+} //END Star CLASS
 
-    //randomizing star size
-    const size = Math.random() * 2 + 1;
-    drawStar(x, y, size);
-  } //END OF FOR LOOP
-} //END OF crateStarrySky FUNCTION
+  // METHOD -- DRAWS THE STAR 
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+    ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; // Star with alternating opacity
+    ctx.fill();
+  }
+
+  // METHOD -- UPDATES THE OPACITY OF STARTS (BLINK)
+  update() {
+    this.opacity += this.blinking * this.blinkSpeed;
+    if (this.opacity >= 1) {
+      this.opacity = 1;
+      this.blinking= -1;  // fade star in opposite directions
+    } else if (this.opacity <= 0) {
+      this.opacity = 0;
+      this.blinking= 1; // fade star in opposite directions
+    }
+    this.draw();
+  }
+}
 
 // FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
 function gameLoop() {
