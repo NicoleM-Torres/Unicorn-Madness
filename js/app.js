@@ -82,19 +82,16 @@ const player = new Player();
 
 //CLASS FOR STARS -- Background
 class Star {
-  constructor (x, y, size, starBlink){
+  constructor(x, y, size, starBlink) {
     this.x = x;
     this.y = y;
     this.size = size;
-    this.blinkSpeed = blinkSpeed; // Controls how fast the star blinks
+    this.blinkSpeed = starBlink; // Controls how fast the star blinks
     this.opacity = Math.random(); // Random initial opacity
     this.blinking = Math.random() < 0.5 ? 1 : -1; // Randomly start increasing or decreasing opacity
   }
 
-  
-} //END Star CLASS
-
-  // METHOD -- DRAWS THE STAR 
+  // METHOD -- DRAWS THE STAR
   draw() {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
@@ -107,22 +104,38 @@ class Star {
     this.opacity += this.blinking * this.blinkSpeed;
     if (this.opacity >= 1) {
       this.opacity = 1;
-      this.blinking= -1;  // fade star in opposite directions
+      this.blinking = -1; // fade star in opposite directions
     } else if (this.opacity <= 0) {
       this.opacity = 0;
-      this.blinking= 1; // fade star in opposite directions
+      this.blinking = 1; // fade star in opposite directions
     }
     this.draw();
-  }
-}
+  } //END IF
+} //END Star CLASS
+
+const stars = [];
+//FUNCTION -- CREATES RANDOMIZED DOTS (STARS) AND
+function nightSky() {
+  for (let i = 0; i < 100; i++) {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const size = Math.random() * 2 + 1;
+    const starBlink = Math.random() * 0.02 + 0.01; //gen random bliking speeds for stars
+    stars.push(new Star(x, y, size, starBlink)); //stores new stars generated in arr
+  } //END OF FOR LOOP
+} //END OF nightSky FUNCTION
+
+function makeStars() {
+  stars.forEach((star) => star.update());
+} // END makeStars FUNCTION
 
 // FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
 function gameLoop() {
-  //RESTART -- Clear the entire canvas for redrawing
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "black"; // Set background color to black
+  ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas with black
 
   //Background
-  createStarrySky();
+  makeStars();
 
   // Update the player's position and restart them
   player.update();
@@ -144,5 +157,8 @@ window.addEventListener("keydown", (e) => {
   } //ND arrow right IF
 }); //END OF KEYSTROKE EVENT LISTENERS
 
-// CALLS gameLoop FUCNTION TO START GAME
-gameLoop();
+// START GAME LOOP AFTER UNICORN IMAGE LOADS
+unicornImg.onload = function () {
+  nightSky(); // Create stars once
+  gameLoop(); // Start the game
+};
