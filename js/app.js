@@ -64,7 +64,7 @@ class Player {
     if (!this.jumping) {
       this.velocityY = -15; // Set jumping(up) speed
       this.jumping = true; //  returns boolean true if the player is jumping
-          jumpSound.play(); // Play jump sound
+      jumpSound.play(); // Play jump sound
     } //END IF STATEMENT
   } //END JUMP METHOD
 
@@ -131,7 +131,6 @@ function makeStars() {
   stars.forEach((star) => star.update());
 } // END makeStars FUNCTION
 
-
 // #region Platforms
 class Platform {
   constructor(x, y, width, height, type = "normal") {
@@ -142,7 +141,7 @@ class Platform {
     this.type = type; //platforms that are normal or disintegrate
     this.image = new Image();
     this.image.src = "media/platform.png";
-    this.image.onload = assetLoaded;    
+    this.image.onload = assetLoaded;
     this.isSteppedOn = false; // For disintegrating platforms
     this.opacity = 1; // For fading effect of the platform
   } //END CONSTRUCTOR
@@ -162,11 +161,11 @@ class Platform {
       if (this.opacity <= 0) {
         // Remove the platform from the array
         platforms.splice(platforms.indexOf(this), 1);
-      }//END IF
-    }//END IF
+      } //END IF
+    } //END IF
     this.draw();
-  }//END UPDATE METHOD
-}//END PLATFORM CLASS
+  } //END UPDATE METHOD
+} //END PLATFORM CLASS
 
 const platforms = [];
 
@@ -188,24 +187,27 @@ function checkPlatformCollisions() {
       // Collision detected
       if (platform.type === "disintegrate") {
         platform.isSteppedOn = true;
-      } //END OF
+      } //END IF
 
       player.y = platform.y - player.height;
       player.velocityY = 0;
       player.jumping = false;
-    }//END IF
-     else if (
+    } //END PLATFORM FOR EACH
+    else if (
       player.x + player.width > platform.x && // Player's right side is to the left of platform's left side
       player.x < platform.x + platform.width && // Player's left side is to the right of platform's right side
       player.y + player.height > platform.y && // Player is below platform's top
       player.y < platform.y + platform.height // Player is above platform's bottom
     ) {
-  } //END PLATFORM CONTS;
-}//END PlatformCollision FUCNTION
-
+      //COLLISION LOG
+    }
+  }); //END PLATFORM CONTS;
+} //END PlatformCollision FUCNTION
 // #endregion
 
 // #region Enemies
+const enemies = [];
+
 class Enemy {
   constructor(x, y, width, height, speed) {
     this.x = x;
@@ -218,28 +220,27 @@ class Enemy {
     this.image.src = "media/villain.png";
     this.image.onload = assetLoaded;
   } //END OF CONTRUSTOR
-  
+
   draw() {
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
   } //END OF DRAW
-  
+
   update() {
     // Move enemy back and forth
     this.x += this.speed * this.direction;
-    
+
     // Change direction at canvas & movement limits
     if (this.x <= 0 || this.x + this.width >= canvas.width) {
       this.direction *= -1; // Change direction when reaching the screen edges
     } //END IF
-    
+
     this.draw();
-  }//END FO UPDATE
+  } //END FO UPDATE
 } //END OF CLASS ENEMY
-const enemies = [];
 
 function createEnemies() {
   enemies.push(new Enemy(500, canvas.height - 150, 80, 80, 2)); // Example enemy
-    enemies.push(new Enemy(600, canvas.height - 200, 100, 100, 1.5)); // other enemy
+  enemies.push(new Enemy(600, canvas.height - 200, 100, 100, 1.5)); // other enemy
 
   //enemyImage.onload = assetLoaded;
 }
@@ -253,16 +254,16 @@ function checkEnemyCollisions() {
       player.y + player.height > enemy.y
     ) {
       // Collision with enemy detected
-            enemyHitSound.play(); // Play enemy hit sound
-      console.log('Collision with enemy!');
-    } //END IF 
+      enemyHitSound.play(); // Play enemy hit sound
+      console.log("Collision with enemy!");
+    } //END IF
   });
 } //END checkEnemyCOllision Function
 
 // #endregion
 
-const jumpSound = new Audio('sounds/jump.mp3');
-const enemyHitSound = new Audio('sounds/enemy-hit.mp3');
+const jumpSound = new Audio("sounds/jump.mp3");
+const enemyHitSound = new Audio("sounds/enemy-hit.mp3");
 
 // FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
 function gameLoop() {
@@ -275,7 +276,7 @@ function gameLoop() {
   // Update and draw platforms
   platforms.forEach((platform) => platform.update());
 
-    // Update and draw enemies
+  // Update and draw enemies
   enemies.forEach((enemy) => enemy.update());
 
   // Check for collisions
@@ -312,10 +313,10 @@ const totalAssets = 3 + platforms.length + enemies.length; // Adjust based on th
 
 function assetLoaded() {
   assetsLoaded++;
-if (assetsLoaded === totalAssets) {
-  nightSky();
-  createPlatforms();
-  createEnemies();
-  gameLoop();
-}
+  if (assetsLoaded === totalAssets) {
+    nightSky();
+    createPlatforms();
+    createEnemies();
+    gameLoop();
+  }
 }
