@@ -13,6 +13,7 @@ const gravity = 0.5;
 
 const unicornImg = new Image();
 unicornImg.src = "media/unicorn-player.png";
+unicornImg.onload = assetLoaded;
 
 class Player {
   constructor() {
@@ -63,6 +64,7 @@ class Player {
     if (!this.jumping) {
       this.velocityY = -15; // Set jumping(up) speed
       this.jumping = true; //  returns boolean true if the player is jumping
+          jumpSound.play(); // Play jump sound
     } //END IF STATEMENT
   } //END JUMP METHOD
 
@@ -129,6 +131,132 @@ function makeStars() {
   stars.forEach((star) => star.update());
 } // END makeStars FUNCTION
 
+
+// #region Platforms
+class Platform {
+  constructor(x, y, width, height, type = "normal") {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.type = type; //platforms that are normal or disintegrate
+    this.image = new Image();
+    this.image.src = "media/platform.png";
+    platformImage.onload = assetLoaded;
+    this.isSteppedOn = false; // For disintegrating platforms
+    this.opacity = 1; // For fading effect of the platform
+  } //END CONSTRUCTOR
+
+  draw() {
+    if (this.type === "disintegrate" && this.isSteppedOn) {
+      ctx.globalAlpha = this.opacity;
+    } //END IF
+    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+    ctx.globalAlpha = 1; // Reset opacity
+  } //END DRAW METHOD
+
+  update() {
+    // Handle disintegration of platforms
+    if (this.type === "disintegrate" && this.isSteppedOn) {
+      this.opacity -= 0.02;
+      if (this.opacity <= 0) {
+        // Remove the platform from the array
+        platforms.splice(platforms.indexOf(this), 1);
+      }//END IF
+    }//END IF
+    this.draw();
+  }//END UPDATE METHOD
+}//END PLATFORM CLASS
+
+const platforms = [];
+
+function createPlatforms() {
+  platforms.push(new Platform(200, canvas.height - 200, 150, 30)); // Normal platform
+  platforms.push(
+    new Platform(400, canvas.height - 300, 150, 30, "disintegrate")
+  ); // Disintegrating platform
+} //END CREATEPLATFORMS FUNCTION
+
+function checkPlatformCollisions() {
+  platforms.forEach((platform) => {
+    if (
+      player.x < platform.x + platform.width &&
+      player.x + player.width > platform.x &&
+      player.y + player.height <= platform.y &&
+      player.y + player.height + player.velocityY >= platform.y
+    ) {
+      // Collision detected
+      if (platform.type === "disintegrate") {
+        platform.isSteppedOn = true;
+      } //END OF
+
+      player.y = platform.y - player.height;
+      player.velocityY = 0;
+      player.jumping = false;
+    }//END IF
+  } //END PLATFORM CONTS);
+}//END PlatformCollision FUCNTION
+
+// #endregion
+
+// #region Enemies
+class Enemy {
+  constructor(x, y, width, height, speed) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.speed = speed;
+    this.direction = 1; // 1 for right, -1 for left
+    this.image = new Image();
+    this.image.src = "media/villain.png";
+  }
+
+  draw() {
+    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+  }
+
+  update() {
+    // Move enemy back and forth
+    this.x += this.speed * this.direction;
+
+    // Change direction at canvas & movement limits
+    if (this.x <= 0 || this.x + this.width >= canvas.width) {
+      this.direction *= -1; // Change direction when reaching the screen edges
+    }
+
+    this.draw();
+  }
+}
+const enemies = [];
+
+function createEnemies() {
+  enemies.push(new Enemy(500, canvas.height - 150, 80, 80, 2)); // Example enemy
+    enemies.push(new Enemy(600, canvas.height - 200, 100, 100, 1.5)); // other enemy
+
+  //enemyImage.onload = assetLoaded;
+}
+
+function checkEnemyCollisions() {
+  enemies.forEach((enemy) => {
+    if (
+      player.x < enemy.x + enemy.width &&
+      player.x + player.width > enemy.x &&
+      player.y < enemy.y + enemy.height &&
+      player.y + player.height > enemy.y
+    ) {
+      // Collision with enemy detected
+            enemyHitSound.play(); // Play enemy hit sound
+      console.log('Collision with enemy!');
+    } //END IF 
+  });
+} //END checkEnemyCOllision Function
+
+// #endregion
+
+const jumpSound = new Audio('sounds/jump.mp3');
+const enemyHitSound = new Audio('sounds/enemy-hit.mp3');
+
 // FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
 function gameLoop() {
   ctx.fillStyle = "black"; // Set background color to black
@@ -137,6 +265,15 @@ function gameLoop() {
   //Background
   makeStars();
 
+  // Update and draw platforms
+  platforms.forEach((platform) => platform.update());
+
+    // Update and draw enemies
+  enemies.forEach((enemy) => enemy.update());
+
+  // Check for collisions
+  checkPlatformCollisions();
+  checkEnemyCollisions();
   // Update the player's position and restart them
   player.update();
 
@@ -162,3 +299,17 @@ unicornImg.onload = function () {
   nightSky(); // Create stars once
   gameLoop(); // Start the game
 };
+
+let assetsLoaded = 0;
+const totalAssets = 3; // Adjust based on the number of images
+
+function assetLoaded() {
+  assetsLoaded++;
+  if (assetsLoaded === totalAssets) {
+    // All assets are loaded
+    nightSky(); // Existing function to create stars
+    createPlatforms();
+    createEnemies();
+    gameLoop(); // Start the game
+  }
+}
