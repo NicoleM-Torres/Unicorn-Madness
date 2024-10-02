@@ -32,6 +32,7 @@ class Player {
 
     // BOOL -- check if player is jumping
     this.jumping = false;
+    this.jumpCount = 0; // Track the number of jumps
 
     this.health = 100; // Initial health
     this.points = 0; // Initial points
@@ -55,7 +56,10 @@ class Player {
       this.y = canvas.height - this.height; // Stop the player at ground level
       this.velocityY = 0; // Reset vertical speed
       this.jumping = false; // Player is no longer jumping
-    } //END IF STATMENT
+      this.jumpCount = 0; // Reset jump count when landing
+    } //END IF STATEMENT
+
+    checkPlatformCollisions(); // Check for collisions with platforms
 
     // Call the draw method to render the player on the screen
     this.draw();
@@ -63,10 +67,11 @@ class Player {
 
   // METHOD -- PLAYER JUMPING
   jump() {
-    // Allows player to jump if they're not already in the air
-    if (!this.jumping) {
-      this.velocityY = -15; // Set jumping(up) speed
-      this.jumping = true; //  returns boolean true if the player is jumping
+    // Allows player to jump if they haven't exceeded the jump limit (double jump)
+    if (this.jumpCount < 2) {
+      this.velocityY = -15; // Set jumping (up) speed
+      this.jumping = true; // Set jumping state to true
+      this.jumpCount++; // Increment the jump count
       jumpSound.play(); // Play jump sound
     } //END IF STATEMENT
   } //END JUMP METHOD
@@ -82,10 +87,14 @@ class Player {
   } //END OF MOVE RIGHT METHOD
 } //END OF PLAYER CLASS
 
+
 // CREATES INSTANCE OF PLAYER CLASS
 const player = new Player();
 
-//Health Bar
+//#region Health Bar
+
+const maxHealth = 100; // Max health
+
 function drawHealthBar() {
   // Draw background
   ctx.fillStyle = "red";
@@ -95,18 +104,21 @@ function drawHealthBar() {
   ctx.fillStyle = "green";
   ctx.fillRect(10, 10, (player.health / 100) * 200, 20); // Scale the health bar
 }
-//CLASS FOR STARS -- Background
+
+//#endregion
+
+//#region CLASS FOR STARS -- Background
 class Star {
-  constructor(x, y, size, starBlink) {
+  constructor(x, y, size, starSpeed) {
     this.x = x;
     this.y = y;
     this.size = size;
-    this.blinkSpeed = starBlink; // Controls how fast the star blinks
+    this.blinkSpeed = starSpeed; // Controls how fast the star blinks
     this.opacity = Math.random(); // Random initial opacity
     this.blinking = Math.random() < 0.5 ? 1 : -1; // Randomly start increasing or decreasing opacity
   }
 
-  // METHOD -- DRAWS THE STAR
+  //   METHOD -- DRAWS THE STAR
   draw() {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
@@ -144,6 +156,8 @@ function makeStars() {
   stars.forEach((star) => star.update());
 } // END makeStars FUNCTION
 
+// #endregion
+
 // #region Platforms
 class Platform {
   constructor(x, y, width, height, type = "normal") {
@@ -151,46 +165,94 @@ class Platform {
     this.y = y;
     this.width = width;
     this.height = height;
-    this.type = type; //platforms that are normal or disintegrate
-    this.image = new Image();
-    this.image.src = "media/platform.png";
-    this.image.onload = assetLoaded;
-    this.isSteppedOn = false; // For disintegrating platforms
+    this.type = type; // "cloud" or "dissolve"
+    this.isSteppedOn = false; // For dissolving platforms
     this.opacity = 1; // For fading effect of the platform
-  } //END CONSTRUCTOR
+  }
 
   draw() {
-    if (this.type === "disintegrate" && this.isSteppedOn) {
-      ctx.globalAlpha = this.opacity;
-    } //END IF
-    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
-    ctx.globalAlpha = 1; // Reset opacity
-  } //END DRAW METHOD
+    if (this.type === "cloud") {
+      this.drawCloud();
+    } else {
+      // Draw regular platform (you can customize this as needed)
+      ctx.fillStyle = "brown"; // Color for normal platform
+      ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+  }
+
+  drawCloud() {
+    ctx.fillStyle = "white"; // Cloud color
+    ctx.beginPath();
+    ctx.arc(
+      this.x + this.width / 4,
+      this.y + this.height / 2,
+      this.width / 4,
+      Math.PI,
+      0,
+      false
+    ); // Left part of cloud
+    ctx.arc(
+      this.x + (3 * this.width) / 4,
+      this.y + this.height / 2,
+      this.width / 4,
+      Math.PI,
+      0,
+      false
+    ); // Right part of cloud
+    ctx.arc(this.x + this.width / 2, this.y, this.width / 4, 0, Math.PI, false); // Top part of cloud
+    ctx.fill();
+    ctx.closePath();
+  }
 
   update() {
-    // Handle disintegration of platforms
-    if (this.type === "disintegrate" && this.isSteppedOn) {
+    if (this.type === "dissolve" && this.isSteppedOn) {
       this.opacity -= 0.02;
       if (this.opacity <= 0) {
-        // Remove the platform from the array
-        platforms.splice(platforms.indexOf(this), 1);
-      } //END IF
-    } //END IF
-    this.draw();
-  } //END UPDATE METHOD
+        platforms.splice(platforms.indexOf(this), 1); // Remove platform
+      }
+    }
+    ctx.globalAlpha = this.opacity; // Apply opacity
+    this.draw(); // Draw the platform
+    ctx.globalAlpha = 1; // Reset opacity
+  }
 } //END PLATFORM CLASS
 
 const platforms = [];
 
-function createPlatforms() {
-  platforms.push(new Platform(200, canvas.height - 200, 150, 30)); // Normal platform
-  platforms.push(
-    new Platform(400, canvas.height - 300, 150, 30, "disintegrate")
-  ); // Disintegrating platform
-} //END CREATEPLATFORMS FUNCTION
+function createRandomPlatforms(numPlatforms) {
+  const minWidth = 50; // Minimum platform width
+  const maxWidth = 200; // Maximum platform width
+  const minHeight = 20; // Minimum platform height
+  const maxHeight = 50; // Maximum platform height
+
+  for (let i = 0; i < numPlatforms; i++) {
+    const width =
+      Math.floor(Math.random() * (maxWidth - minWidth + 1)) + minWidth; // Random width
+    const height =
+      Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight; // Random height
+    const x = Math.floor(Math.random() * (canvas.width - width)); // Random x position
+    const y = Math.floor(Math.random() * (canvas.height - height)); // Random y position
+
+    // Randomly decide if the platform should dissolve
+    const type = Math.random() < 0.5 ? "dissolve" : "normal"; // 50% chance for dissolve type
+    platforms.push(new Platform(x, y, width, height, type)); // Add the platform to the platforms array
+  }
+}  
+
+function isOverlapping(newPlatform) {
+  return platforms.some((platform) => {
+    return (
+      newPlatform.x < platform.x + platform.width &&
+      newPlatform.x + newPlatform.width > platform.x &&
+      newPlatform.y < platform.y + platform.height &&
+      newPlatform.y + newPlatform.height > platform.y
+    );
+  });
+}
 
 function checkPlatformCollisions() {
   platforms.forEach((platform) => {
+    // Check if the player is above the platform
     if (
       player.x < platform.x + platform.width &&
       player.x + player.width > platform.x &&
@@ -198,24 +260,18 @@ function checkPlatformCollisions() {
       player.y + player.height + player.velocityY >= platform.y
     ) {
       // Collision detected
-      if (platform.type === "disintegrate") {
-        platform.isSteppedOn = true;
-      } //END IF
+      player.y = platform.y - player.height; // Position the player on top of the platform
+      player.velocityY = 0; // Reset vertical velocity
+      player.jumping = false; // Player is no longer jumping
 
-      player.y = platform.y - player.height;
-      player.velocityY = 0;
-      player.jumping = false;
-    } //END PLATFORM FOR EACH
-    else if (
-      player.x + player.width > platform.x && // Player's right side is to the left of platform's left side
-      player.x < platform.x + platform.width && // Player's left side is to the right of platform's right side
-      player.y + player.height > platform.y && // Player is below platform's top
-      player.y < platform.y + platform.height // Player is above platform's bottom
-    ) {
-      //COLLISION LOG
+      // Handle dissolving platforms
+      if (platform.type === "dissolve") {
+        platform.isSteppedOn = true; // Set as stepped on for dissolving
+      }
     }
-  }); //END PLATFORM CONTS;
-} //END PlatformCollision FUCNTION
+  });
+}
+ //END PlatformCollision FUCNTION
 // #endregion
 
 // #region Enemies
@@ -247,15 +303,25 @@ class Enemy {
       this.direction *= -1; // Change direction when reaching the screen edges
     } //END IF
 
+    // Keep the enemy within the visible bounds above platforms
+    if (this.y <= 50 || this.y + this.height >= canvas.height) {
+      this.direction *= -1; // Change direction if hitting the top or bottom
+    }
+
     this.draw();
   } //END FO UPDATE
 } //END OF CLASS ENEMY
 
 function createEnemies() {
-  enemies.push(new Enemy(500, canvas.height - 150, 80, 80, 2)); // Example enemy
-  enemies.push(new Enemy(600, canvas.height - 200, 100, 100, 1.5)); // other enemy
-
-  //enemyImage.onload = assetLoaded;
+  // Only create enemies if there are fewer than 5
+  while (enemies.length < 5) {
+    const minY = 50; // Minimum y position above the ground
+    const maxY = canvas.height - 100; // Maximum y position to allow some space above the bottom
+    const x = Math.random() * (canvas.width - 80); // Random x position
+    const y = Math.random() * (maxY - minY) + minY; // Random y position, between minY and maxY
+    const speed = Math.random() * 2 + 1; // Random speed for enemies
+    enemies.push(new Enemy(x, y, 80, 80, speed)); // Adjust width and height as necessary
+  }
 }
 
 function checkEnemyCollisions() {
@@ -298,15 +364,50 @@ function checkEnemyCollisions() {
   });
 } //END checkEnemyCOllision Function
 
-// #endregion
-
 const jumpSound = new Audio("sounds/jump.mp3");
 const enemyHitSound = new Audio("sounds/enemy-hit.mp3");
+// #endregion
 
-// FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
+//#region Player Movements
+const keys = {
+  left: false,
+  right: false,
+  up: false,
+};
+
+// Key down event listener
+window.addEventListener("keydown", function (event) {
+  if (event.key === "ArrowLeft") keys.left = true;
+  if (event.key === "ArrowRight") keys.right = true;
+  if (event.key === "ArrowUp") keys.up = true;
+});
+
+// Key up event listener
+window.addEventListener("keyup", function (event) {
+  if (event.key === "ArrowLeft") keys.left = false;
+  if (event.key === "ArrowRight") keys.right = false;
+  if (event.key === "ArrowUp") keys.up = false;
+});
+
+
+//#endregion
+
+
+//#region  FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
 function gameLoop() {
   ctx.fillStyle = "black"; // Set background color to black
   ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas with black
+
+  // Check for input and move the player
+  if (keys.left) {
+    player.moveLeft();
+  }
+  if (keys.right) {
+    player.moveRight();
+  }
+  if (keys.up) {
+    player.jump();
+  }
 
   //Background
   makeStars();
@@ -325,9 +426,35 @@ function gameLoop() {
 
   drawHealthBar();
 
+  // Check for game over condition
+  if (player.health <= 0) {
+    ctx.fillStyle = "white";
+    ctx.font = "48px Arial";
+    ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+    setTimeout(restartGame, 2000);
+    return; // Stop the game loop
+  } //END IF
+
+  //  setTimeout(restartGame, 2000);
   // Repeats the game loop using requestAnimationFrame
   requestAnimationFrame(gameLoop);
 } // END OF gameLoop FUNCTION
+
+function restartGame() {
+  // Reset player properties
+  player.health = maxHealth; // Reset health
+  player.points = 0; // Reset points
+  player.x = 100; // Reset player position
+  player.y = canvas.height - player.height; // Reset player Y position
+
+  // Clear existing enemies and platforms
+  enemies.length = 0;
+  platforms.length = 0;
+
+  createRandomPlatforms(5); // Recreate platforms
+  createEnemies(); // Recreate enemies
+  gameLoop(); // Restart the game loop
+} //END restartGame FUNCTION
 
 // EVENT LISTENERS FOR KEYBOARD STROKES
 window.addEventListener("keydown", (e) => {
@@ -345,7 +472,7 @@ window.addEventListener("keydown", (e) => {
 // START GAME LOOP AFTER UNICORN IMAGE LOADS
 unicornImg.onload = function () {
   nightSky(); // Create stars once
-  createPlatforms();
+  createRandomPlatforms();
   createEnemies();
   gameLoop(); // Start the game
 };
@@ -362,7 +489,9 @@ function assetLoaded() {
 
 function startGame() {
   nightSky();
-  createPlatforms();
+  createRandomPlatforms(5); // Generate 5 random platforms
   createEnemies();
   gameLoop(); // Start the game loop
 }
+
+//#endregion
