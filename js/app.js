@@ -217,24 +217,24 @@ class Enemy {
     this.image = new Image();
     this.image.src = "media/villain.png";
     this.image.onload = assetLoaded;
-  }
-
+  } //END OF CONTRUSTOR
+  
   draw() {
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
-  }
-
+  } //END OF DRAW
+  
   update() {
     // Move enemy back and forth
     this.x += this.speed * this.direction;
-
+    
     // Change direction at canvas & movement limits
     if (this.x <= 0 || this.x + this.width >= canvas.width) {
       this.direction *= -1; // Change direction when reaching the screen edges
-    }
-
+    } //END IF
+    
     this.draw();
-  }
-}
+  }//END FO UPDATE
+} //END OF CLASS ENEMY
 const enemies = [];
 
 function createEnemies() {
