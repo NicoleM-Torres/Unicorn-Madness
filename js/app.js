@@ -142,7 +142,7 @@ class Platform {
     this.type = type; //platforms that are normal or disintegrate
     this.image = new Image();
     this.image.src = "media/platform.png";
-    platformImage.onload = assetLoaded;
+    this.image.onload = assetLoaded;    
     this.isSteppedOn = false; // For disintegrating platforms
     this.opacity = 1; // For fading effect of the platform
   } //END CONSTRUCTOR
@@ -194,7 +194,13 @@ function checkPlatformCollisions() {
       player.velocityY = 0;
       player.jumping = false;
     }//END IF
-  } //END PLATFORM CONTS);
+     else if (
+      player.x + player.width > platform.x && // Player's right side is to the left of platform's left side
+      player.x < platform.x + platform.width && // Player's left side is to the right of platform's right side
+      player.y + player.height > platform.y && // Player is below platform's top
+      player.y < platform.y + platform.height // Player is above platform's bottom
+    ) {
+  } //END PLATFORM CONTS;
 }//END PlatformCollision FUCNTION
 
 // #endregion
@@ -210,6 +216,7 @@ class Enemy {
     this.direction = 1; // 1 for right, -1 for left
     this.image = new Image();
     this.image.src = "media/villain.png";
+    this.image.onload = assetLoaded;
   }
 
   draw() {
@@ -301,15 +308,14 @@ unicornImg.onload = function () {
 };
 
 let assetsLoaded = 0;
-const totalAssets = 3; // Adjust based on the number of images
+const totalAssets = 3 + platforms.length + enemies.length; // Adjust based on the number of images
 
 function assetLoaded() {
   assetsLoaded++;
-  if (assetsLoaded === totalAssets) {
-    // All assets are loaded
-    nightSky(); // Existing function to create stars
-    createPlatforms();
-    createEnemies();
-    gameLoop(); // Start the game
-  }
+if (assetsLoaded === totalAssets) {
+  nightSky();
+  createPlatforms();
+  createEnemies();
+  gameLoop();
+}
 }
