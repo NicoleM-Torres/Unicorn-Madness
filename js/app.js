@@ -12,8 +12,8 @@ const gravity = 0.5;
 // PLAYER CLASS -- DEFINED
 
 const unicornImg = new Image();
-unicornImg.src = "media/unicorn-player.png";
 unicornImg.onload = assetLoaded;
+unicornImg.src = "media/unicorn-player.png";
 
 class Player {
   constructor() {
@@ -32,6 +32,9 @@ class Player {
 
     // BOOL -- check if player is jumping
     this.jumping = false;
+
+    this.health = 100; // Initial health
+    this.points = 0; // Initial points
   } //END OF CONSTRUCTOR
 
   // SETS PLAYER ON CANVAS
@@ -82,6 +85,16 @@ class Player {
 // CREATES INSTANCE OF PLAYER CLASS
 const player = new Player();
 
+//Health Bar
+function drawHealthBar() {
+  // Draw background
+  ctx.fillStyle = "red";
+  ctx.fillRect(10, 10, 200, 20);
+
+  // Draw current health
+  ctx.fillStyle = "green";
+  ctx.fillRect(10, 10, (player.health / 100) * 200, 20); // Scale the health bar
+}
 //CLASS FOR STARS -- Background
 class Star {
   constructor(x, y, size, starBlink) {
@@ -247,16 +260,41 @@ function createEnemies() {
 
 function checkEnemyCollisions() {
   enemies.forEach((enemy) => {
+    // Check for collision
     if (
       player.x < enemy.x + enemy.width &&
       player.x + player.width > enemy.x &&
       player.y < enemy.y + enemy.height &&
       player.y + player.height > enemy.y
     ) {
-      // Collision with enemy detected
-      enemyHitSound.play(); // Play enemy hit sound
-      console.log("Collision with enemy!");
-    } //END IF
+      // Check if the player is above the enemy -- jump
+      if (
+        player.velocityY > 0 &&
+        player.y + player.height - player.velocityY <= enemy.y
+      ) {
+        // Collision with the enemy while jumping
+        enemyHitSound.play();
+        console.log("Enemy defeated!");
+
+        player.points += 10; // Gain points for jumping on the enemy
+        console.log("Points: " + player.points);
+
+        // Remove the enemy
+        enemies.splice(enemies.indexOf(enemy), 1);
+      } else {
+        // Collision with enemy without jumping
+        enemyHitSound.play(); // Play enemy hit sound
+        console.log("You were hit!");
+
+        player.health -= 10; // Lose health on hit
+        console.log("Health: " + player.health);
+
+        // Check if player health is zero or below
+        if (player.health <= 0) {
+          console.log("Game Over!");
+        }
+      }
+    }
   });
 } //END checkEnemyCOllision Function
 
@@ -285,6 +323,8 @@ function gameLoop() {
   // Update the player's position and restart them
   player.update();
 
+  drawHealthBar();
+
   // Repeats the game loop using requestAnimationFrame
   requestAnimationFrame(gameLoop);
 } // END OF gameLoop FUNCTION
@@ -305,6 +345,8 @@ window.addEventListener("keydown", (e) => {
 // START GAME LOOP AFTER UNICORN IMAGE LOADS
 unicornImg.onload = function () {
   nightSky(); // Create stars once
+  createPlatforms();
+  createEnemies();
   gameLoop(); // Start the game
 };
 
@@ -314,9 +356,13 @@ const totalAssets = 3 + platforms.length + enemies.length; // Adjust based on th
 function assetLoaded() {
   assetsLoaded++;
   if (assetsLoaded === totalAssets) {
-    nightSky();
-    createPlatforms();
-    createEnemies();
-    gameLoop();
+    startGame();
   }
+}
+
+function startGame() {
+  nightSky();
+  createPlatforms();
+  createEnemies();
+  gameLoop(); // Start the game loop
 }
