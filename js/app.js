@@ -6,10 +6,9 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+//#region PLAYER CLASS -- DEFINED
 // GRAVITY -- SIMULATES PLAYER FALLING (GOING DOWN)
 const gravity = 0.5;
-
-// PLAYER CLASS -- DEFINED
 
 const unicornImg = new Image();
 unicornImg.onload = assetLoaded;
@@ -17,7 +16,7 @@ unicornImg.src = "media/unicorn-player.png";
 
 class Player {
   constructor() {
-    // PLAYER SIZE
+    // PLAYER SIZE  
     this.width = 100;
     this.height = 100;
 
@@ -88,8 +87,9 @@ class Player {
 } //END OF PLAYER CLASS
 
 
-// CREATES INSTANCE OF PLAYER CLASS
+// CREATES INSTANCE PLAYER
 const player = new Player();
+//#endregion
 
 //#region Health Bar
 
@@ -105,7 +105,7 @@ function drawHealthBar() {
   ctx.fillRect(10, 10, (player.health / 100) * 200, 20); // Scale the health bar
 }
 
-//#endregion
+ //#endregion
 
 //#region CLASS FOR STARS -- Background
 class Star {
@@ -114,7 +114,7 @@ class Star {
     this.y = y;
     this.size = size;
     this.blinkSpeed = starSpeed; // Controls how fast the star blinks
-    this.opacity = Math.random(); // Random initial opacity
+    this.opacity = Math.random(); // Random opacity
     this.blinking = Math.random() < 0.5 ? 1 : -1; // Randomly start increasing or decreasing opacity
   }
 
@@ -391,7 +391,6 @@ window.addEventListener("keyup", function (event) {
 
 
 //#endregion
-
 
 //#region  FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
 function gameLoop() {
