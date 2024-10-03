@@ -6,10 +6,9 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+//#region PLAYER CLASS -- DEFINED
 // GRAVITY -- SIMULATES PLAYER FALLING (GOING DOWN)
 const gravity = 0.5;
-
-// PLAYER CLASS -- DEFINED
 
 const unicornImg = new Image();
 unicornImg.onload = assetLoaded;
@@ -87,15 +86,19 @@ class Player {
   } //END OF MOVE RIGHT METHOD
 } //END OF PLAYER CLASS
 
-
-// CREATES INSTANCE OF PLAYER CLASS
+// CREATES INSTANCE PLAYER
 const player = new Player();
+//#endregion
 
 //#region Health Bar
 
 const maxHealth = 100; // Max health
 
 function drawHealthBar() {
+  // Clear the previous health bar
+  ctx.fillStyle = "black";
+  ctx.fillRect(10, 10, 200, 20); // Background for the health bar
+
   // Draw background
   ctx.fillStyle = "red";
   ctx.fillRect(10, 10, 200, 20);
@@ -107,6 +110,74 @@ function drawHealthBar() {
 
 //#endregion
 
+//#region Point Bar
+
+player.starsCollected = 0; // Add this to the Player class constructor
+
+function drawPointBar() {
+  // Clear the previous point bar area
+  ctx.fillStyle = "black";
+  ctx.fillRect(10, 40, 220, 20); // Background for the point bar
+
+  // Draw the collected stars
+  for (let i = 0; i < 5; i++) {
+    if (i < player.starsCollected) {
+      ctx.fillStyle = "yellow"; // Color for collected stars
+    } else {
+      ctx.fillStyle = "gray"; // Color for empty stars
+    }
+    ctx.fillRect(10 + i * 40, 40, 30, 20); // Draw each star's rectangle
+  }
+}
+
+const starItems = [];
+
+class StarItem {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.width = 20;
+    this.height = 20;
+    this.image = new Image();
+    this.image.src = "media/star.png"; // Path to the star image
+  }
+
+  draw() {
+    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+  }
+}
+
+function createStars(numStars) {
+  for (let i = 0; i < numStars; i++) {
+    const x = Math.random() * (canvas.width - 20);
+    const y = Math.random() * (canvas.height - 20);
+    starItems.push(new StarItem(x, y));
+  }
+}
+
+function checkStarCollisions() {
+  starItems.forEach((star, index) => {
+    if (
+      player.x < star.x + star.width &&
+      player.x + player.width > star.x &&
+      player.y < star.y + star.height &&
+      player.y + player.height > star.y
+    ) {
+      // Player collects the star
+      player.starsCollected++;
+      starItems.splice(index, 1); // Remove the star from the array
+      console.log("Star collected! Total stars: " + player.starsCollected);
+
+      // Cap starsCollected at 5
+      if (player.starsCollected > 5) {
+        player.starsCollected = 5;
+      }
+    }
+  });
+}
+
+//#endregion
+
 //#region CLASS FOR STARS -- Background
 class Star {
   constructor(x, y, size, starSpeed) {
@@ -114,7 +185,7 @@ class Star {
     this.y = y;
     this.size = size;
     this.blinkSpeed = starSpeed; // Controls how fast the star blinks
-    this.opacity = Math.random(); // Random initial opacity
+    this.opacity = Math.random(); // Random opacity
     this.blinking = Math.random() < 0.5 ? 1 : -1; // Randomly start increasing or decreasing opacity
   }
 
@@ -237,7 +308,7 @@ function createRandomPlatforms(numPlatforms) {
     const type = Math.random() < 0.5 ? "dissolve" : "normal"; // 50% chance for dissolve type
     platforms.push(new Platform(x, y, width, height, type)); // Add the platform to the platforms array
   }
-}  
+}
 
 function isOverlapping(newPlatform) {
   return platforms.some((platform) => {
@@ -271,7 +342,7 @@ function checkPlatformCollisions() {
     }
   });
 }
- //END PlatformCollision FUCNTION
+//END PlatformCollision FUCNTION
 // #endregion
 
 // #region Enemies
@@ -286,7 +357,7 @@ class Enemy {
     this.speed = speed;
     this.direction = 1; // 1 for right, -1 for left
     this.image = new Image();
-    this.image.src = "media/villain.png";
+    this.image.src = "media/spikeBall.png";
     this.image.onload = assetLoaded;
   } //END OF CONTRUSTOR
 
@@ -353,7 +424,11 @@ function checkEnemyCollisions() {
         console.log("You were hit!");
 
         player.health -= 10; // Lose health on hit
+        if (player.health < 0) player.health = 0; // Prevent health from going negative
         console.log("Health: " + player.health);
+
+        // Update the health bar
+        drawHealthBar();
 
         // Check if player health is zero or below
         if (player.health <= 0) {
@@ -362,7 +437,8 @@ function checkEnemyCollisions() {
       }
     }
   });
-} //END checkEnemyCOllision Function
+}
+//END checkEnemyCOllision Function
 
 const jumpSound = new Audio("sounds/jump.mp3");
 const enemyHitSound = new Audio("sounds/enemy-hit.mp3");
@@ -389,9 +465,7 @@ window.addEventListener("keyup", function (event) {
   if (event.key === "ArrowUp") keys.up = false;
 });
 
-
 //#endregion
-
 
 //#region  FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
 function gameLoop() {
@@ -409,7 +483,7 @@ function gameLoop() {
     player.jump();
   }
 
-  //Background
+  // Background
   makeStars();
 
   // Update and draw platforms
@@ -418,13 +492,20 @@ function gameLoop() {
   // Update and draw enemies
   enemies.forEach((enemy) => enemy.update());
 
+  // Update and draw star items
+  starItems.forEach((star) => star.draw());
+
   // Check for collisions
   checkPlatformCollisions();
   checkEnemyCollisions();
+  checkStarCollisions(); // Check for star collection
+
   // Update the player's position and restart them
   player.update();
 
+  // Draw HUD elements
   drawHealthBar();
+  drawPointBar(); // Draw the point bar
 
   // Check for game over condition
   if (player.health <= 0) {
@@ -433,28 +514,32 @@ function gameLoop() {
     ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
     setTimeout(restartGame, 2000);
     return; // Stop the game loop
-  } //END IF
+  }
 
-  //  setTimeout(restartGame, 2000);
   // Repeats the game loop using requestAnimationFrame
   requestAnimationFrame(gameLoop);
-} // END OF gameLoop FUNCTION
+}
+// END OF gameLoop FUNCTION
 
 function restartGame() {
   // Reset player properties
   player.health = maxHealth; // Reset health
   player.points = 0; // Reset points
+  player.starsCollected = 0; // Reset collected stars
   player.x = 100; // Reset player position
   player.y = canvas.height - player.height; // Reset player Y position
 
-  // Clear existing enemies and platforms
+  // Clear existing enemies, platforms, and stars
   enemies.length = 0;
   platforms.length = 0;
+  starItems.length = 0;
 
   createRandomPlatforms(5); // Recreate platforms
   createEnemies(); // Recreate enemies
+  createStars(5); // Recreate stars
   gameLoop(); // Restart the game loop
-} //END restartGame FUNCTION
+}
+ //END restartGame FUNCTION
 
 // EVENT LISTENERS FOR KEYBOARD STROKES
 window.addEventListener("keydown", (e) => {
@@ -490,6 +575,8 @@ function assetLoaded() {
 function startGame() {
   nightSky();
   createRandomPlatforms(5); // Generate 5 random platforms
+  createStars(5); // Create 5 stars when setting up the game
+  drawPointBar();
   createEnemies();
   gameLoop(); // Start the game loop
 }
