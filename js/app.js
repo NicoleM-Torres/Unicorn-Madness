@@ -11,7 +11,10 @@ canvas.height = window.innerHeight;
 const gravity = 0.5;
 
 const unicornImg = new Image();
+<<<<<<< HEAD
 unicornImg.onload = assetLoaded;
+=======
+>>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
 unicornImg.src = "media/unicorn-player.png";
 
 class Player {
@@ -66,12 +69,19 @@ class Player {
 
   // METHOD -- PLAYER JUMPING
   jump() {
+<<<<<<< HEAD
     // Allows player to jump if they haven't exceeded the jump limit (double jump)
     if (this.jumpCount < 2) {
       this.velocityY = -15; // Set jumping (up) speed
       this.jumping = true; // Set jumping state to true
       this.jumpCount++; // Increment the jump count
       jumpSound.play(); // Play jump sound
+=======
+    // Allows player to jump if they're not already in the air
+    if (!this.jumping) {
+      this.velocityY = -15; // Set jumping(up) speed
+      this.jumping = true; //  returns boolean true if the player is jumping
+>>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
     } //END IF STATEMENT
   } //END JUMP METHOD
 
@@ -227,6 +237,7 @@ function makeStars() {
   stars.forEach((star) => star.update());
 } // END makeStars FUNCTION
 
+<<<<<<< HEAD
 // #endregion
 
 // #region Platforms
@@ -468,6 +479,9 @@ window.addEventListener("keyup", function (event) {
 //#endregion
 
 //#region  FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
+=======
+// FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
+>>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
 function gameLoop() {
   ctx.fillStyle = "black"; // Set background color to black
   ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas with black
@@ -486,6 +500,7 @@ function gameLoop() {
   // Background
   makeStars();
 
+<<<<<<< HEAD
   // Update and draw platforms
   platforms.forEach((platform) => platform.update());
 
@@ -500,6 +515,8 @@ function gameLoop() {
   checkEnemyCollisions();
   checkStarCollisions(); // Check for star collection
 
+=======
+>>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
   // Update the player's position and restart them
   player.update();
 
@@ -561,6 +578,7 @@ unicornImg.onload = function () {
   createEnemies();
   gameLoop(); // Start the game
 };
+<<<<<<< HEAD
 
 let assetsLoaded = 0;
 const totalAssets = 3 + platforms.length + enemies.length; // Adjust based on the number of images
@@ -582,3 +600,5 @@ function startGame() {
 }
 
 //#endregion
+=======
+>>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
