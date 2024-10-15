@@ -11,7 +11,6 @@ canvas.height = window.innerHeight;
 const gravity = 0.5;
 
 const unicornImg = new Image();
-
 unicornImg.onload = assetLoaded;
 unicornImg.src = "media/unicorn-player.png";
 
@@ -36,6 +35,7 @@ class Player {
 
     this.health = 100; // Initial health
     this.points = 0; // Initial points
+    player.starsCollected = 0; // Add this to the Player class constructor
   } //END OF CONSTRUCTOR
 
   // SETS PLAYER ON CANVAS
@@ -73,12 +73,6 @@ class Player {
       this.jumping = true; // Set jumping state to true
       this.jumpCount++; // Increment the jump count
       jumpSound.play(); // Play jump sound
-
-    // Allows player to jump if they're not already in the air
-    if (!this.jumping) {
-      this.velocityY = -15; // Set jumping(up) speed
-      this.jumping = true; //  returns boolean true if the player is jumping
-
     } //END IF STATEMENT
   } //END JUMP METHOD
 
@@ -98,6 +92,7 @@ const player = new Player();
 //#endregion
 
 //#region Health Bar
+
 const maxHealth = 100; // Max health
 
 function drawHealthBar() {
@@ -117,8 +112,6 @@ function drawHealthBar() {
 //#endregion
 
 //#region Point Bar
-
-player.starsCollected = 0; // Add this to the Player class constructor
 
 function drawPointBar() {
   // Clear the previous point bar area
@@ -443,8 +436,7 @@ function checkEnemyCollisions() {
       }
     }
   });
-}
-//END checkEnemyCOllision Function
+} //END checkEnemyCOllision Function
 
 const jumpSound = new Audio("sounds/jump.mp3");
 const enemyHitSound = new Audio("sounds/enemy-hit.mp3");
@@ -501,6 +493,8 @@ function gameLoop() {
   // Update and draw star items
   starItems.forEach((star) => star.draw());
 
+  // createStars(5); // Create 5 stars when setting up the game
+
   // Check for collisions
   checkPlatformCollisions();
   checkEnemyCollisions();
@@ -525,27 +519,25 @@ function gameLoop() {
   // Repeats the game loop using requestAnimationFrame
   requestAnimationFrame(gameLoop);
 }
+
 // END OF gameLoop FUNCTION
 
 function restartGame() {
   // Reset player properties
   player.health = maxHealth; // Reset health
   player.points = 0; // Reset points
-  player.starsCollected = 0; // Reset collected stars
   player.x = 100; // Reset player position
   player.y = canvas.height - player.height; // Reset player Y position
 
-  // Clear existing enemies, platforms, and stars
+  // Clear existing enemies and platforms
   enemies.length = 0;
   platforms.length = 0;
-  starItems.length = 0;
 
   createRandomPlatforms(5); // Recreate platforms
+  createStars(5); // Create 5 stars when setting up the game
   createEnemies(); // Recreate enemies
-  createStars(5); // Recreate stars
   gameLoop(); // Restart the game loop
-}
- //END restartGame FUNCTION
+} //END restartGame FUNCTION
 
 // EVENT LISTENERS FOR KEYBOARD STROKES
 window.addEventListener("keydown", (e) => {
@@ -564,6 +556,7 @@ window.addEventListener("keydown", (e) => {
 unicornImg.onload = function () {
   nightSky(); // Create stars once
   createRandomPlatforms();
+  createStars(5); // Create 5 stars when setting up the game
   createEnemies();
   gameLoop(); // Start the game
 };
@@ -582,7 +575,6 @@ function startGame() {
   nightSky();
   createRandomPlatforms(5); // Generate 5 random platforms
   createStars(5); // Create 5 stars when setting up the game
-  drawPointBar();
   createEnemies();
   gameLoop(); // Start the game loop
 }
