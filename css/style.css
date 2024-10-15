@@ -1,22 +1,47 @@
-/* #region BACKGROUND */
-* {
-  margin: 0;
-  padding: 0;
+body {
+    margin: 0;
+    overflow: hidden; /* Prevent scrolling */
 }
 
-canvas {
-  display: block;
-  background-color: lightblue;
-  width: 100vw;
-  height: 100vh;
+#gameCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: black; /* Canvas background color */
 }
 
-/* #endregion */
+.controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%); /* Center buttons */
+    display: flex;
+    gap: 10px; /* Space between buttons */
+}
 
-/* #region */
+/* Initially hide the controls */
+.controls {
+    display: none;
+}
 
-/* #endregion */
+button {
+    padding: 15px 20px;
+    font-size: 18px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
 
-/* #region */
+button:active {
+    background-color: rgba(255, 255, 255, 0.5);
+}
 
-/* #endregion */
+/* Media query for screens 1024px wide or smaller (iPad and smaller) */
+@media only screen and (max-width: 1024px) {
+    .controls {
+        display: flex; /* Show controls */
+    }
+}

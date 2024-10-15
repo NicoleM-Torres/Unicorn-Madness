@@ -34,8 +34,10 @@ class Player {
     this.jumpCount = 0; // Track the number of jumps
 
     this.health = 100; // Initial health
+    this.lastHitTime = 0; // Time since the last hit
+    this.invulnerabilityDuration = 1000; // 1-second invulnerability after being hit
     this.points = 0; // Initial points
-    player.starsCollected = 0; // Add this to the Player class constructor
+    this.starsCollected = 0;
   } //END OF CONSTRUCTOR
 
   // SETS PLAYER ON CANVAS
@@ -79,11 +81,17 @@ class Player {
   // METHOD -- MOVE LEFT
   moveLeft() {
     this.x -= this.speed; // Decrease x position to move left
+    if (this.x < 0) {
+      this.x = 0; // Keep the player within the left boundary
+    }
   } //END OF MOVE LEFT METHOD
 
   // METHOD -- MOVE RIGHT
   moveRight() {
     this.x += this.speed; // Increase x position to move right
+    if (this.x + this.width > canvas.width) {
+      this.x = canvas.width - this.width; // Keep the player within the right boundary
+    }
   } //END OF MOVE RIGHT METHOD
 } //END OF PLAYER CLASS
 
@@ -148,8 +156,8 @@ class StarItem {
 
 function createStars(numStars) {
   for (let i = 0; i < numStars; i++) {
-    const x = Math.random() * (canvas.width - 20);
-    const y = Math.random() * (canvas.height - 20);
+    const x = Math.random() * (canvas.width - 20); // Ensure stars stay within the canvas width
+    const y = Math.random() * (canvas.height - 20); // Ensure stars stay within the canvas height
     starItems.push(new StarItem(x, y));
   }
 }
@@ -229,6 +237,7 @@ function makeStars() {
 // #endregion
 
 // #region Platforms
+
 class Platform {
   constructor(x, y, width, height, type = "normal") {
     this.x = x;
@@ -241,37 +250,33 @@ class Platform {
   }
 
   draw() {
-    if (this.type === "cloud") {
-      this.drawCloud();
+    ctx.globalAlpha = this.opacity; // Apply opacity for dissolving effect
+    if (this.type === "dissolve") {
+      this.drawGradientPlatform(); // Draw gradient platform for dissolving type
     } else {
-      // Draw regular platform (you can customize this as needed)
-      ctx.fillStyle = "brown"; // Color for normal platform
-      ctx.fillRect(this.x, this.y, this.width, this.height);
+      this.drawGradientPlatform(); // Draw gradient platform for solid type
     }
+    ctx.globalAlpha = 1; // Reset opacity
   }
 
-  drawCloud() {
-    ctx.fillStyle = "white"; // Cloud color
-    ctx.beginPath();
-    ctx.arc(
-      this.x + this.width / 4,
-      this.y + this.height / 2,
-      this.width / 4,
-      Math.PI,
-      0,
-      false
-    ); // Left part of cloud
-    ctx.arc(
-      this.x + (3 * this.width) / 4,
-      this.y + this.height / 2,
-      this.width / 4,
-      Math.PI,
-      0,
-      false
-    ); // Right part of cloud
-    ctx.arc(this.x + this.width / 2, this.y, this.width / 4, 0, Math.PI, false); // Top part of cloud
-    ctx.fill();
-    ctx.closePath();
+  drawGradientPlatform() {
+    // Create a horizontal gradient
+    const gradient = ctx.createLinearGradient(
+      this.x,
+      this.y,
+      this.x + this.width,
+      this.y
+    );
+    gradient.addColorStop(0, "red");
+    gradient.addColorStop(0.17, "orange");
+    gradient.addColorStop(0.34, "yellow");
+    gradient.addColorStop(0.51, "green");
+    gradient.addColorStop(0.68, "blue");
+    gradient.addColorStop(0.85, "indigo");
+    gradient.addColorStop(1, "violet");
+
+    ctx.fillStyle = gradient; // Set the gradient as the fill style
+    ctx.fillRect(this.x, this.y, this.width, this.height); // Draw the platform as a filled rectangle
   }
 
   update() {
@@ -281,13 +286,16 @@ class Platform {
         platforms.splice(platforms.indexOf(this), 1); // Remove platform
       }
     }
-    ctx.globalAlpha = this.opacity; // Apply opacity
     this.draw(); // Draw the platform
-    ctx.globalAlpha = 1; // Reset opacity
   }
-} //END PLATFORM CLASS
+}
+//END PLATFORM CLASS
 
 const platforms = [];
+
+// Minimum distances
+const minHorizontalDistance = 20; // Minimum horizontal distance between platforms
+const minVerticalDistance = 100; // Minimum vertical distance for jumping
 
 function createRandomPlatforms(numPlatforms) {
   const minWidth = 50; // Minimum platform width
@@ -296,27 +304,48 @@ function createRandomPlatforms(numPlatforms) {
   const maxHeight = 50; // Maximum platform height
 
   for (let i = 0; i < numPlatforms; i++) {
-    const width =
-      Math.floor(Math.random() * (maxWidth - minWidth + 1)) + minWidth; // Random width
-    const height =
-      Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight; // Random height
-    const x = Math.floor(Math.random() * (canvas.width - width)); // Random x position
-    const y = Math.floor(Math.random() * (canvas.height - height)); // Random y position
+    let width, height, x, y, type;
+    let isOverlapping = true;
 
-    // Randomly decide if the platform should dissolve
-    const type = Math.random() < 0.5 ? "dissolve" : "normal"; // 50% chance for dissolve type
+    while (isOverlapping) {
+      width = Math.floor(Math.random() * (maxWidth - minWidth + 1)) + minWidth; // Random width
+      height =
+        Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight; // Random height
+      x = Math.floor(Math.random() * (canvas.width - width)); // Random x position
+      y = Math.floor(
+        Math.random() * (canvas.height - height - minVerticalDistance)
+      ); // Random y position, leaving space for jumping
+
+      // Randomly decide if the platform should dissolve
+      type = Math.random() < 0.5 ? "dissolve" : "normal"; // 50% chance for dissolve type
+
+      // Create a temporary platform to check for overlap
+      const newPlatform = new Platform(x, y, width, height, type);
+      isOverlapping = isOverlappingWithExistingPlatforms(newPlatform);
+    }
+
+    // After finding a non-overlapping position, push to the platforms array
     platforms.push(new Platform(x, y, width, height, type)); // Add the platform to the platforms array
   }
 }
 
-function isOverlapping(newPlatform) {
+// Function to check if a new platform overlaps with existing platforms
+function isOverlappingWithExistingPlatforms(newPlatform) {
   return platforms.some((platform) => {
-    return (
+    // Check for overlap
+    const horizontalOverlap =
       newPlatform.x < platform.x + platform.width &&
-      newPlatform.x + newPlatform.width > platform.x &&
+      newPlatform.x + newPlatform.width > platform.x;
+
+    const verticalOverlap =
       newPlatform.y < platform.y + platform.height &&
-      newPlatform.y + newPlatform.height > platform.y
-    );
+      newPlatform.y + newPlatform.height > platform.y;
+
+    // Ensure minimum distance for jumping
+    const sufficientVerticalDistance =
+      Math.abs(newPlatform.y - platform.y) >= minVerticalDistance;
+
+    return horizontalOverlap && verticalOverlap && !sufficientVerticalDistance;
   });
 }
 
@@ -333,6 +362,7 @@ function checkPlatformCollisions() {
       player.y = platform.y - player.height; // Position the player on top of the platform
       player.velocityY = 0; // Reset vertical velocity
       player.jumping = false; // Player is no longer jumping
+      player.jumpCount = 0; // Allow the player to jump again
 
       // Handle dissolving platforms
       if (platform.type === "dissolve") {
@@ -341,10 +371,12 @@ function checkPlatformCollisions() {
     }
   });
 }
+
 //END PlatformCollision FUCNTION
 // #endregion
 
 // #region Enemies
+
 const enemies = [];
 
 class Enemy {
@@ -395,6 +427,8 @@ function createEnemies() {
 }
 
 function checkEnemyCollisions() {
+  const currentTime = Date.now(); // Get the current time
+
   enemies.forEach((enemy) => {
     // Check for collision
     if (
@@ -418,25 +452,40 @@ function checkEnemyCollisions() {
         // Remove the enemy
         enemies.splice(enemies.indexOf(enemy), 1);
       } else {
-        // Collision with enemy without jumping
-        enemyHitSound.play(); // Play enemy hit sound
-        console.log("You were hit!");
+        // Check if enough time has passed since the last hit
+        if (currentTime - player.lastHitTime > player.invulnerabilityDuration) {
+          enemyHitSound.play(); // Play enemy hit sound
+          console.log("You were hit!");
 
-        player.health -= 10; // Lose health on hit
-        if (player.health < 0) player.health = 0; // Prevent health from going negative
-        console.log("Health: " + player.health);
+          player.health -= 10; // Lose health on hit
+          if (player.health < 0) player.health = 0; // Prevent health from going negative
+          console.log("Health: " + player.health);
 
-        // Update the health bar
-        drawHealthBar();
+          // Update the health bar
+          drawHealthBar();
 
-        // Check if player health is zero or below
-        if (player.health <= 0) {
-          console.log("Game Over!");
+          // Apply bounce-back effect
+          const bounceDistance = 20; // Distance to move the player back
+          player.velocityY = -5; // Give a slight upward push
+          if (player.x < enemy.x) {
+            player.x -= bounceDistance; // Move player to the left if hit from the left
+          } else {
+            player.x += bounceDistance; // Move player to the right if hit from the right
+          }
+
+          // Update the time of the last hit
+          player.lastHitTime = currentTime;
+
+          // Check if player health is zero or below
+          if (player.health <= 0) {
+            console.log("Game Over!");
+          }
         }
       }
     }
   });
-} //END checkEnemyCOllision Function
+}
+//END checkEnemyCOllision Function
 
 const jumpSound = new Audio("sounds/jump.mp3");
 const enemyHitSound = new Audio("sounds/enemy-hit.mp3");
@@ -481,6 +530,13 @@ function gameLoop() {
     player.jump();
   }
 
+  if (isMovingLeft) {
+    player.moveLeft();
+  }
+  if (isMovingRight) {
+    player.moveRight();
+  }
+
   // Background
   makeStars();
 
@@ -493,19 +549,26 @@ function gameLoop() {
   // Update and draw star items
   starItems.forEach((star) => star.draw());
 
-  // createStars(5); // Create 5 stars when setting up the game
-
   // Check for collisions
   checkPlatformCollisions();
   checkEnemyCollisions();
   checkStarCollisions(); // Check for star collection
 
-  // Update the player's position and restart them
+  // Update the player's position
   player.update();
 
   // Draw HUD elements
   drawHealthBar();
   drawPointBar(); // Draw the point bar
+
+  // Check if all 5 stars are collected
+  if (player.starsCollected >= 5) {
+    ctx.fillStyle = "white";
+    ctx.font = "48px Arial";
+    ctx.fillText("You Win!", canvas.width / 2 - 100, canvas.height / 2);
+    setTimeout(restartGame, 3000); // Restart the game after 3 seconds
+    return; // Stop the game loop
+  }
 
   // Check for game over condition
   if (player.health <= 0) {
@@ -526,20 +589,22 @@ function restartGame() {
   // Reset player properties
   player.health = maxHealth; // Reset health
   player.points = 0; // Reset points
+  player.starsCollected = 0;
   player.x = 100; // Reset player position
   player.y = canvas.height - player.height; // Reset player Y position
 
   // Clear existing enemies and platforms
   enemies.length = 0;
   platforms.length = 0;
+  starItems.length = 0;
 
-  createRandomPlatforms(5); // Recreate platforms
+  createRandomPlatforms(8); // Recreate platforms
   createStars(5); // Create 5 stars when setting up the game
   createEnemies(); // Recreate enemies
   gameLoop(); // Restart the game loop
 } //END restartGame FUNCTION
 
-// EVENT LISTENERS FOR KEYBOARD STROKES
+//#region EVENT LISTENERS FOR KEYBOARD STROKES
 window.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
     player.jump(); // Trigger jump -- spacebar
@@ -552,11 +617,46 @@ window.addEventListener("keydown", (e) => {
   } //ND arrow right IF
 }); //END OF KEYSTROKE EVENT LISTENERS
 
+let isMovingLeft = false;
+let isMovingRight = false;
+
+// Add event listeners for mobile buttons
+document.getElementById("leftBtn").addEventListener("touchstart", function () {
+  isMovingLeft = true; // Start moving left
+  player.moveLeft(); // Initial move left
+});
+
+document.getElementById("leftBtn").addEventListener("touchend", function () {
+  isMovingLeft = false; // Stop moving left
+});
+
+document.getElementById("rightBtn").addEventListener("touchstart", function () {
+  isMovingRight = true; // Start moving right
+  player.moveRight(); // Initial move right
+});
+
+document.getElementById("rightBtn").addEventListener("touchend", function () {
+  isMovingRight = false; // Stop moving right
+});
+
+document.getElementById("jumpBtn").addEventListener("touchstart", function () {
+  player.jump(); // Jump when the button is pressed
+});
+
+// Prevent default touch events to avoid scrolling
+document.querySelectorAll(".controls button").forEach((button) => {
+  button.addEventListener("touchstart", function (event) {
+    event.preventDefault();
+  });
+});
+
+//#endregion
+
 // START GAME LOOP AFTER UNICORN IMAGE LOADS
 unicornImg.onload = function () {
   nightSky(); // Create stars once
   createRandomPlatforms();
-  createStars(5); // Create 5 stars when setting up the game
+  createStars(); // Create 5 stars when setting up the game
   createEnemies();
   gameLoop(); // Start the game
 };
@@ -573,7 +673,7 @@ function assetLoaded() {
 
 function startGame() {
   nightSky();
-  createRandomPlatforms(5); // Generate 5 random platforms
+  createRandomPlatforms(8); // Generate 5 random platforms
   createStars(5); // Create 5 stars when setting up the game
   createEnemies();
   gameLoop(); // Start the game loop
