@@ -12,7 +12,10 @@ const gravity = 0.5;
 
 const unicornImg = new Image();
 <<<<<<< HEAD
+<<<<<<< HEAD
 unicornImg.onload = assetLoaded;
+=======
+>>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
 =======
 >>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
 unicornImg.src = "media/unicorn-player.png";
@@ -81,6 +84,9 @@ class Player {
     if (!this.jumping) {
       this.velocityY = -15; // Set jumping(up) speed
       this.jumping = true; //  returns boolean true if the player is jumping
+<<<<<<< HEAD
+>>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
+=======
 >>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
     } //END IF STATEMENT
   } //END JUMP METHOD
@@ -237,6 +243,7 @@ function makeStars() {
   stars.forEach((star) => star.update());
 } // END makeStars FUNCTION
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 // #endregion
 
@@ -480,6 +487,8 @@ window.addEventListener("keyup", function (event) {
 
 //#region  FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
 =======
+=======
+>>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
 // FUNCTION -- MAIN GAME LOOP THAT CONTINUOUSLY RUNS THE GAME
 >>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
 function gameLoop() {
@@ -501,6 +510,7 @@ function gameLoop() {
   makeStars();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   // Update and draw platforms
   platforms.forEach((platform) => platform.update());
 
@@ -515,6 +525,8 @@ function gameLoop() {
   checkEnemyCollisions();
   checkStarCollisions(); // Check for star collection
 
+=======
+>>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
 =======
 >>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
   // Update the player's position and restart them
@@ -579,6 +591,7 @@ unicornImg.onload = function () {
   gameLoop(); // Start the game
 };
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 let assetsLoaded = 0;
 const totalAssets = 3 + platforms.length + enemies.length; // Adjust based on the number of images
@@ -600,5 +613,7 @@ function startGame() {
 }
 
 //#endregion
+=======
+>>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
 =======
 >>>>>>> parent of 9e3d6b1 (platform, villain and collision add)
