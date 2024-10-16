@@ -6,7 +6,7 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-//#region PLAYER CLASS -- DEFINED
+//#region PLAYER CLASS
 // GRAVITY -- SIMULATES PLAYER FALLING (GOING DOWN)
 const gravity = 0.5;
 
@@ -50,7 +50,7 @@ class Player {
     // Moves player vertically based on their vertical speed
     this.y += this.velocityY;
 
-    // Applies gravity to increase the downward speed over time
+    // Applies gravity to increase the downward speed
     this.velocityY += gravity;
 
     // Ensure the player doesn't fall below the bottom of the canvas
@@ -244,10 +244,10 @@ class Platform {
     this.y = y;
     this.width = width;
     this.height = height;
-    this.type = type; // "cloud" or "dissolve"
+    this.type = type; // "solid" or "dissolve"
     this.isSteppedOn = false; // For dissolving platforms
     this.opacity = 1; // For fading effect of the platform
-  }
+  } //END PLATFORM CONSTRUCTOR
 
   draw() {
     ctx.globalAlpha = this.opacity; // Apply opacity for dissolving effect
@@ -257,7 +257,7 @@ class Platform {
       this.drawGradientPlatform(); // Draw gradient platform for solid type
     }
     ctx.globalAlpha = 1; // Reset opacity
-  }
+  } //END DRAW
 
   drawGradientPlatform() {
     // Create a horizontal gradient
@@ -277,7 +277,7 @@ class Platform {
 
     ctx.fillStyle = gradient; // Set the gradient as the fill style
     ctx.fillRect(this.x, this.y, this.width, this.height); // Draw the platform as a filled rectangle
-  }
+  } //END GRADIENT
 
   update() {
     if (this.type === "dissolve" && this.isSteppedOn) {
@@ -287,8 +287,8 @@ class Platform {
       }
     }
     this.draw(); // Draw the platform
-  }
-}
+  } //END UPDATE
+} //END PLATFORM CLASS
 //END PLATFORM CLASS
 
 const platforms = [];
